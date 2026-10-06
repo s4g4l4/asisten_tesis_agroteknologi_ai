@@ -3,15 +3,17 @@ import '@radix-ui/themes/styles.css';
 import { Theme } from '@radix-ui/themes';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-// Mengubah BrowserRouter menjadi HashRouter untuk kompatibilitas penuh GitHub Pages
+// Menggunakan HashRouter agar kompatibel penuh dengan GitHub Pages
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 
 import { Home } from './src/pages/Home';
+import NotFound from './src/pages/NotFound.tsx';
+
+// Melakukan impor komponen secara lazy loading
 const ThesisEditor = lazy(() => import('./src/pages/ThesisEditor').then(m => ({ default: m.ThesisEditor })));
 const AiSettings = lazy(() => import('./src/pages/AiSettings').then(m => ({ default: m.AiSettings })));
 const Library = lazy(() => import('./src/pages/Library').then(m => ({ default: m.Library })));
 const NotebookLmHub = lazy(() => import('./src/pages/NotebookLmHub').then(m => ({ default: m.NotebookLmHub })));
-import NotFound from './src/pages/NotFound.tsx';
 
 const App: React.FC = () => {
   return (
@@ -24,11 +26,17 @@ const App: React.FC = () => {
             </div>
           }>
             <Routes>
-              <Route path="/" element={<Home />} />
+              {/* HALAMAN UTAMA DIUBAH: Langsung mengarah ke ThesisEditor agar kolom input judul langsung muncul */}
+              <Route path="/" element={<ThesisEditor />} />
+              
+              {/* Rute halaman lainnya */}
+              <Route path="/home" element={<Home />} />
               <Route path="/thesis" element={<ThesisEditor />} />
               <Route path="/notebooklm" element={<NotebookLmHub />} />
               <Route path="/settings" element={<AiSettings />} />
               <Route path="/library" element={<Library />} />
+              
+              {/* Rute jika halaman tidak ditemukan */}
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>
