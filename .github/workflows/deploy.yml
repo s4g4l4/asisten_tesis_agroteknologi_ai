@@ -1,41 +1,49 @@
-import react from "@vitejs/plugin-react";
-import { defineConfig } from "vite";
+name: Deploy to GitHub Pages
 
-export default defineConfig({
-  plugins: [react()],
-  // Tambahkan baris base di bawah ini untuk GitHub Pages
-  base: '/nama-repositori-anda/', // <--- Ganti dengan nama repositori GitHub Anda
-  esbuild: {
-    logOverride: {
-      'ignored-directive': 'silent', 
-    },
-  },
-  logLevel: 'info', 
-  build: {
-    rollupOptions: {
-      onwarn(warning, warn) {
-        // ignore certain harmless warnings
-        if (
-          warning.message.includes('Module level directives') ||
-          warning.message.includes('"use client"')  ||
-          warning.message.includes('"was ignored"')
-        ) {
-          return; 
-        }
+on:
+  push:
+    branches:
+      - main
 
-        // FAIL build on unresolved imports
-        if (warning.code === 'UNRESOLVED_IMPORT') {
-          throw new Error(`Build failed due to unresolved import:\n${warning.message}`);
-        }
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
-        // FAIL build on missing exports (like your Input error)
-        if (warning.code === 'PLUGIN_WARNING' && /is not exported/.test(warning.message)) {
-          throw new Error(`Build failed due to missing export:\n${warning.message}`);
-        }
+concurrency:
+  group: 'pages'
+  cancel-in-progress: true
 
-        // other warnings: log normally
-        warn(warning);
-      },
-    },
-  },
-});
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './dist'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
